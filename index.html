@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Аналитика квартир</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <h1>Аналитика стоимости квартир</h1>
+      <p class="subtitle">Сравнение выгрузок, изменения цен, новые и исчезнувшие квартиры.</p>
+    </div>
+  </header>
+
+  <main>
+    <section id="status" class="status">Загружаю данные…</section>
+
+    <section class="controls card">
+      <div>
+        <label for="dateSelect">Дата выгрузки</label>
+        <select id="dateSelect"></select>
+      </div>
+      <div>
+        <label for="projectSelect">Проект</label>
+        <select id="projectSelect"></select>
+      </div>
+      <div>
+        <label for="buildingSelect">Дом</label>
+        <select id="buildingSelect"></select>
+      </div>
+      <div>
+        <label for="searchInput">Поиск</label>
+        <input id="searchInput" type="search" placeholder="id, проект, дом или ссылка" />
+      </div>
+      <div>
+        <label for="minArea">Площадь от, м²</label>
+        <input id="minArea" type="number" min="0" step="1" placeholder="например 30" />
+      </div>
+      <div>
+        <label for="maxPrice">Цена до, ₽</label>
+        <input id="maxPrice" type="number" min="0" step="100000" placeholder="например 9000000" />
+      </div>
+    </section>
+
+    <section class="cards-grid" id="summaryCards"></section>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <h2>Проекты</h2>
+          <p>Сводка по выбранной дате. Дом, секция и этаж берутся из самой свежей выгрузки по ID квартиры.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-project-sort="project">Проект</th>
+              <th data-project-sort="count">Квартир</th>
+              <th data-project-sort="avgArea">Средняя площадь</th>
+              <th data-project-sort="avgPrice">Средняя цена</th>
+              <th data-project-sort="avgM2">Средняя цена за м²</th>
+              <th data-project-sort="medianM2">Медианная цена за м²</th>
+              <th data-project-sort="avgDiscount">Средняя скидка</th>
+            </tr>
+          </thead>
+          <tbody id="projectsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <h2>Изменения относительно прошлой выгрузки</h2>
+          <p id="changesHint">Появятся, когда будет минимум 2 CSV-файла.</p>
+        </div>
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-change-tab="changed">Изменили цену</button>
+          <button class="tab" data-change-tab="new">Новые</button>
+          <button class="tab" data-change-tab="gone">Исчезли</button>
+        </div>
+      </div>
+      <div class="table-wrap large">
+        <table>
+          <thead id="changesHead"></thead>
+          <tbody id="changesTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <h2>Квартиры</h2>
+          <p>Таблица по выбранной дате с фильтрами.</p>
+        </div>
+        <button id="exportBtn" type="button" class="secondary">Скачать отфильтрованный CSV</button>
+      </div>
+      <div class="table-wrap large">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="project">Проект</th>
+              <th data-sort="flat_id">ID</th>
+              <th data-sort="area">Площадь</th>
+              <th data-sort="floor">Этаж</th>
+              <th data-sort="building_name">Дом</th>
+              <th data-sort="section_number">Секция</th>
+              <th data-sort="section_floors_count">Этажей в секции</th>
+              <th data-sort="price_with_discount">Цена со скидкой</th>
+              <th data-sort="price_without_discount">Цена без скидки</th>
+              <th data-sort="price_m2">Цена за м²</th>
+              <th data-sort="discount">Скидка</th>
+              <th>Ссылка</th>
+            </tr>
+          </thead>
+          <tbody id="flatsTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
