@@ -52,39 +52,6 @@ project;link;area;price_with_discount;price_without_discount;flat_id;floor;build
 
 3. Обнови сайт.
 
-## Как проверить локально
-
-В папке проекта запусти:
-
-```bash
-python3 -m http.server 8000
-```
-
-Потом открой:
-
-```text
-http://localhost:8000
-```
-
-На Windows команда может быть:
-
-```bash
-python -m http.server 8000
-```
-
-## Как залить на GitHub Pages
-
-1. Создай репозиторий на GitHub.
-2. Загрузи туда все файлы проекта.
-3. Открой `Settings` → `Pages`.
-4. В `Build and deployment` выбери:
-   - Source: `Deploy from a branch`
-   - Branch: `main`
-   - Folder: `/root`
-5. Сохрани настройки.
-
-Через некоторое время GitHub даст ссылку на сайт.
-
 
 ## Сортировка таблиц
 
