@@ -3,6 +3,7 @@ const DATA_DIR = 'data/';
 const els = {
   status: document.getElementById('status'),
   dateSelect: document.getElementById('dateSelect'),
+  compareDateSelect: document.getElementById('compareDateSelect'),
   projectSelect: document.getElementById('projectSelect'),
   buildingSelect: document.getElementById('buildingSelect'),
   searchInput: document.getElementById('searchInput'),
@@ -42,8 +43,13 @@ async function init() {
 }
 
 function bindEvents() {
-  [els.dateSelect, els.projectSelect, els.buildingSelect, els.searchInput, els.minArea, els.maxPrice].forEach(el => {
+  [els.compareDateSelect, els.projectSelect, els.buildingSelect, els.searchInput, els.minArea, els.maxPrice].forEach(el => {
     el.addEventListener('input', render);
+  });
+
+  els.dateSelect.addEventListener('input', () => {
+    fillCompareDateSelector();
+    render();
   });
 
   els.projectSelect.addEventListener('input', () => {
@@ -245,10 +251,34 @@ function enrichWithLatestStaticData(row) {
 function fillSelectors() {
   els.dateSelect.innerHTML = snapshots.map(s => `<option value="${s.date}">${s.label}</option>`).join('');
   if (snapshots.length) els.dateSelect.value = snapshots.at(-1).date;
+  fillCompareDateSelector();
 
   const projects = [...new Set(allRows.map(r => r.project))].filter(Boolean).sort((a, b) => a.localeCompare(b, 'ru'));
   els.projectSelect.innerHTML = `<option value="all">Все проекты</option>` + projects.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
   fillBuildingSelector();
+}
+
+function fillCompareDateSelector() {
+  const currentIdx = snapshots.findIndex(s => s.date === els.dateSelect.value);
+  const currentValue = els.compareDateSelect.value;
+  const compareSnapshots = currentIdx > 0 ? snapshots.slice(0, currentIdx) : [];
+
+  if (!compareSnapshots.length) {
+    els.compareDateSelect.innerHTML = '<option value="">Нет выгрузки для сравнения</option>';
+    els.compareDateSelect.disabled = true;
+    return;
+  }
+
+  els.compareDateSelect.disabled = false;
+  els.compareDateSelect.innerHTML = compareSnapshots
+    .map(s => `<option value="${s.date}">${s.label}</option>`)
+    .join('');
+
+  if (compareSnapshots.some(s => s.date === currentValue)) {
+    els.compareDateSelect.value = currentValue;
+  } else {
+    els.compareDateSelect.value = compareSnapshots.at(-1).date;
+  }
 }
 
 function fillBuildingSelector() {
@@ -337,16 +367,18 @@ function renderProjects() {
 }
 
 function renderChanges() {
-  const idx = snapshots.findIndex(s => s.date === els.dateSelect.value);
-  if (idx <= 0) {
-    els.changesHint.textContent = 'Для сравнения нужен минимум второй CSV и выбранная не первая дата.';
+  const currentSnapshot = snapshots.find(s => s.date === els.dateSelect.value);
+  const compareSnapshot = snapshots.find(s => s.date === els.compareDateSelect.value);
+
+  if (!currentSnapshot || !compareSnapshot || currentSnapshot.date === compareSnapshot.date) {
+    els.changesHint.textContent = 'Выбери текущую выгрузку и более раннюю выгрузку для сравнения.';
     els.changesHead.innerHTML = '';
-    els.changesTable.innerHTML = emptyRow(8, 'Добавь следующую выгрузку, и здесь появятся изменения цен, новые и исчезнувшие квартиры.');
+    els.changesTable.innerHTML = emptyRow(8, 'Для сравнения нужна минимум одна более ранняя выгрузка.');
     return;
   }
 
-  const currentDate = snapshots[idx].date;
-  const prevDate = snapshots[idx - 1].date;
+  const currentDate = currentSnapshot.date;
+  const prevDate = compareSnapshot.date;
   const project = els.projectSelect.value;
   const building = els.buildingSelect.value;
   const rowMatches = r => (project === 'all' || r.project === project) && (building === 'all' || r.building_name === building);
@@ -370,7 +402,7 @@ function renderChanges() {
     .filter(r => !curMap.has(r.flat_id))
     .sort((a, b) => compareBySortState(a, b, changeSortStates.gone));
 
-  els.changesHint.textContent = `Сравнение ${snapshots[idx].label} с ${snapshots[idx - 1].label}: ${changed.length} изменили цену, ${fresh.length} новых, ${gone.length} исчезли.`;
+  els.changesHint.textContent = `Сравнение ${currentSnapshot.label} с ${compareSnapshot.label}: ${changed.length} изменили цену, ${fresh.length} новых, ${gone.length} исчезли.`;
 
   if (activeChangeTab === 'changed') {
     els.changesHead.innerHTML = `<tr>${changeTh('project', 'Проект')}${changeTh('flat_id', 'ID')}${changeTh('building_name', 'Дом')}${changeTh('floor', 'Этаж')}${changeTh('old_price', 'Было')}${changeTh('price_with_discount', 'Стало')}${changeTh('delta', 'Изменение')}${plainTh('Ссылка')}</tr>`;

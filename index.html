@@ -1,27 +1,40 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Аналитика квартир</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
   <header class="hero">
     <div>
+      <p class="eyebrow">apartments analytics</p>
       <h1>Аналитика стоимости квартир</h1>
       <p class="subtitle">Сравнение выгрузок, изменения цен, новые и исчезнувшие квартиры.</p>
+    </div>
+    <div class="hero-actions">
+      <label class="file-upload">
+        Загрузить CSV
+        <input id="localFiles" type="file" accept=".csv" multiple>
+      </label>
+      <button id="resetBtn" class="secondary" type="button">Загрузить из data</button>
     </div>
   </header>
 
   <main>
-    <section id="status" class="status">Загружаю данные…</section>
+    <div id="status" class="status">Загружаю данные…</div>
 
-    <section class="controls card">
+    <section class="card controls">
       <div>
         <label for="dateSelect">Дата выгрузки</label>
         <select id="dateSelect"></select>
+      </div>
+      <div>
+        <label for="compareDateSelect">Сравнивать с</label>
+        <select id="compareDateSelect"></select>
       </div>
       <div>
         <label for="projectSelect">Проект</label>
@@ -33,19 +46,19 @@
       </div>
       <div>
         <label for="searchInput">Поиск</label>
-        <input id="searchInput" type="search" placeholder="id, проект, дом или ссылка" />
+        <input id="searchInput" type="search" placeholder="ID, проект, ссылка">
       </div>
       <div>
         <label for="minArea">Площадь от, м²</label>
-        <input id="minArea" type="number" min="0" step="1" placeholder="например 30" />
+        <input id="minArea" type="number" min="0" step="0.1">
       </div>
       <div>
         <label for="maxPrice">Цена до, ₽</label>
-        <input id="maxPrice" type="number" min="0" step="100000" placeholder="например 9000000" />
+        <input id="maxPrice" type="number" min="0" step="100000">
       </div>
     </section>
 
-    <section class="cards-grid" id="summaryCards"></section>
+    <section id="summaryCards" class="cards-grid"></section>
 
     <section class="card">
       <div class="section-head">
@@ -75,16 +88,16 @@
     <section class="card">
       <div class="section-head">
         <div>
-          <h2>Изменения относительно прошлой выгрузки</h2>
-          <p id="changesHint">Появятся, когда будет минимум 2 CSV-файла.</p>
+          <h2>Изменения относительно выбранной выгрузки</h2>
+          <p id="changesHint">Выбери дату и выгрузку для сравнения.</p>
         </div>
         <div class="tabs" role="tablist">
-          <button class="tab active" data-change-tab="changed">Изменили цену</button>
-          <button class="tab" data-change-tab="new">Новые</button>
-          <button class="tab" data-change-tab="gone">Исчезли</button>
+          <button class="tab active" data-change-tab="changed" type="button">Изменили цену</button>
+          <button class="tab" data-change-tab="new" type="button">Новые</button>
+          <button class="tab" data-change-tab="gone" type="button">Исчезли</button>
         </div>
       </div>
-      <div class="table-wrap large">
+      <div class="table-wrap changes-wrap">
         <table>
           <thead id="changesHead"></thead>
           <tbody id="changesTable"></tbody>
@@ -98,7 +111,7 @@
           <h2>Квартиры</h2>
           <p>Таблица по выбранной дате с фильтрами.</p>
         </div>
-        <button id="exportBtn" type="button" class="secondary">Скачать отфильтрованный CSV</button>
+        <button id="exportBtn" type="button">Скачать отфильтрованный CSV</button>
       </div>
       <div class="table-wrap large">
         <table>
@@ -124,7 +137,8 @@
     </section>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="app.js"></script>
+  <footer>
+    Данные берутся из <code>data/files.json</code> и CSV-файлов в папке <code>data</code>.
+  </footer>
 </body>
 </html>
