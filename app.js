@@ -157,18 +157,21 @@ function normalizeRow(row, filename, snapshotDate) {
   const project = clean(row.project || row['название проекта']);
   const flatId = clean(row.flat_id || row['id квартиры'] || row.id);
   const area = parseRuNumber(row.area || row['площадь']);
-  const priceWithDiscount = parseRuNumber(row.price_with_discount || row['цена со скидкой']);
+  const discountPrice = parseRuNumber(row.price_with_discount || row['цена со скидкой']);
   const priceWithoutDiscount = parseRuNumber(row.price_without_discount || row['цена без скидки']);
+  const currentPrice = discountPrice || priceWithoutDiscount;
   const link = clean(row.link || row['ссылка на квартиру']);
 
-  if (!project || !flatId || !area || !priceWithDiscount) return null;
+  if (!project || !flatId || !area || !currentPrice) {
+    return null;
+  }
 
   return {
     project,
     link,
     area,
-    price_with_discount: priceWithDiscount,
-    price_without_discount: priceWithoutDiscount || priceWithDiscount,
+    price_with_discount: currentPrice,
+    price_without_discount: priceWithoutDiscount || currentPrice,
     flat_id: String(flatId),
     floor: parseOptionalNumber(row.floor || row['этаж']),
     building_name: clean(row.building_name || row['дом']),
@@ -178,8 +181,8 @@ function normalizeRow(row, filename, snapshotDate) {
     date: snapshotDate.iso,
     date_label: snapshotDate.label,
     date_sort: snapshotDate.sort,
-    price_m2: priceWithDiscount / area,
-    discount: Math.max(0, (priceWithoutDiscount || priceWithDiscount) - priceWithDiscount),
+    price_m2: currentPrice / area,
+    discount: Math.max(0, (priceWithoutDiscount || currentPrice) - currentPrice),
   };
 }
 
