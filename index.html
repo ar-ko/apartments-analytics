@@ -4,23 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Аналитика квартир</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="flats.css">
+  <script type="module" src="js/main.js"></script>
 </head>
 <body>
   <header class="hero">
     <div>
       <p class="eyebrow">apartments analytics</p>
       <h1>Аналитика стоимости квартир</h1>
-      <p class="subtitle">Сравнение выгрузок, изменения цен, новые и исчезнувшие квартиры.</p>
-    </div>
-    <div class="hero-actions">
-      <label class="file-upload">
-        Загрузить CSV
-        <input id="localFiles" type="file" accept=".csv" multiple>
-      </label>
-      <button id="resetBtn" class="secondary" type="button">Загрузить из data</button>
+      <p id="dataDate" class="hero-date" hidden></p>
     </div>
   </header>
 
@@ -28,14 +22,6 @@
     <div id="status" class="status">Загружаю данные…</div>
 
     <section class="card controls">
-      <div>
-        <label for="dateSelect">Дата выгрузки</label>
-        <select id="dateSelect"></select>
-      </div>
-      <div>
-        <label for="compareDateSelect">Сравнивать с</label>
-        <select id="compareDateSelect"></select>
-      </div>
       <div>
         <label for="projectSelect">Проект</label>
         <select id="projectSelect"></select>
@@ -49,12 +35,18 @@
         <input id="searchInput" type="search" placeholder="ID, проект, ссылка">
       </div>
       <div>
-        <label for="minArea">Площадь от, м²</label>
-        <input id="minArea" type="number" min="0" step="0.1">
+        <label for="minArea">Площадь, м²</label>
+        <div class="range">
+          <input id="minArea" type="number" min="0" step="0.1" placeholder="от" aria-label="Площадь от, м²">
+          <input id="maxArea" type="number" min="0" step="0.1" placeholder="до" aria-label="Площадь до, м²">
+        </div>
       </div>
       <div>
-        <label for="maxPrice">Цена до, ₽</label>
-        <input id="maxPrice" type="number" min="0" step="100000">
+        <label for="minPrice">Цена, ₽</label>
+        <div class="range">
+          <input id="minPrice" type="text" inputmode="numeric" autocomplete="off" placeholder="от" aria-label="Цена от, ₽">
+          <input id="maxPrice" type="text" inputmode="numeric" autocomplete="off" placeholder="до" aria-label="Цена до, ₽">
+        </div>
       </div>
     </section>
 
@@ -64,22 +56,12 @@
       <div class="section-head">
         <div>
           <h2>Проекты</h2>
-          <p>Сводка по выбранной дате. Дом, секция и этаж берутся из самой свежей выгрузки по ID квартиры.</p>
+          <p>Сводка по последней выгрузке. Дом, секция и этаж берутся из самой свежей выгрузки по ID квартиры.</p>
         </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th data-project-sort="project">Проект</th>
-              <th data-project-sort="count">Квартир</th>
-              <th data-project-sort="avgArea">Средняя площадь</th>
-              <th data-project-sort="avgPrice">Средняя цена</th>
-              <th data-project-sort="avgM2">Средняя цена за м²</th>
-              <th data-project-sort="medianM2">Медианная цена за м²</th>
-              <th data-project-sort="avgDiscount">Средняя скидка</th>
-            </tr>
-          </thead>
+          <thead id="projectsHead"></thead>
           <tbody id="projectsTable"></tbody>
         </table>
       </div>
@@ -91,54 +73,94 @@
           <h2>Изменения относительно выбранной выгрузки</h2>
           <p id="changesHint">Выбери дату и выгрузку для сравнения.</p>
         </div>
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-change-tab="changed" type="button">Изменили цену</button>
-          <button class="tab" data-change-tab="new" type="button">Новые</button>
-          <button class="tab" data-change-tab="gone" type="button">Исчезли</button>
+        <div class="changes-tools">
+          <div class="changes-dates">
+            <div>
+              <label for="dateSelect">Дата выгрузки</label>
+              <select id="dateSelect"></select>
+            </div>
+            <div>
+              <label for="compareDateSelect">Сравнивать с</label>
+              <select id="compareDateSelect"></select>
+            </div>
+          </div>
+          <div class="tabs" role="tablist">
+            <button class="tab active" role="tab" aria-selected="true" data-change-tab="changed" type="button">Изменили цену</button>
+            <button class="tab" role="tab" aria-selected="false" data-change-tab="new" type="button">Новые</button>
+            <button class="tab" role="tab" aria-selected="false" data-change-tab="gone" type="button">Исчезли</button>
+          </div>
         </div>
       </div>
-      <div class="table-wrap changes-wrap">
-        <table>
-          <thead id="changesHead"></thead>
-          <tbody id="changesTable"></tbody>
-        </table>
-      </div>
+      <div id="changesBody" class="flats-body"></div>
     </section>
 
-    <section class="card">
+    <section class="card flats-block" id="flats">
       <div class="section-head">
         <div>
           <h2>Квартиры</h2>
-          <p>Таблица по выбранной дате с фильтрами.</p>
+          <p id="flatsHint">Таблица по последней выгрузке с фильтрами.</p>
         </div>
-        <button id="exportBtn" type="button">Скачать отфильтрованный CSV</button>
+        <div class="flats-tools">
+          <div class="seg" role="group" aria-label="Вид блока «Квартиры»" hidden>
+            <button type="button" data-flats-view="table" aria-pressed="true">Таблица</button>
+            <button type="button" data-flats-view="chess" aria-pressed="false">Шахматка</button>
+          </div>
+        </div>
       </div>
-      <div class="table-wrap large">
-        <table>
-          <thead>
-            <tr>
-              <th data-sort="project">Проект</th>
-              <th data-sort="flat_id">ID</th>
-              <th data-sort="area">Площадь</th>
-              <th data-sort="floor">Этаж</th>
-              <th data-sort="building_name">Дом</th>
-              <th data-sort="section_number">Секция</th>
-              <th data-sort="section_floors_count">Этажей в секции</th>
-              <th data-sort="price_with_discount">Цена со скидкой</th>
-              <th data-sort="price_without_discount">Цена без скидки</th>
-              <th data-sort="price_m2">Цена за м²</th>
-              <th data-sort="discount">Скидка</th>
-              <th>Ссылка</th>
-            </tr>
-          </thead>
-          <tbody id="flatsTable"></tbody>
-        </table>
-      </div>
+      <div id="flatsBody" class="flats-body"></div>
     </section>
   </main>
 
-  <footer>
-    Данные берутся из <code>data/files.json</code> и CSV-файлов в папке <code>data</code>.
-  </footer>
+  <!-- Панель квартиры, крупный просмотр, поповер и подсказка графика: общие для блока «Квартиры». -->
+  <div id="tip" hidden></div>
+  <div id="pop" hidden role="tooltip"></div>
+  <div id="backdrop" hidden></div>
+  <div id="lightbox" hidden role="dialog" aria-label="Крупный просмотр">
+    <div class="lb-inner" id="lbInner"></div>
+    <button class="lb-arrow prev" type="button" id="lbPrev" aria-label="Предыдущая картинка">‹</button>
+    <button class="lb-arrow next" type="button" id="lbNext" aria-label="Следующая картинка">›</button>
+    <span class="lb-count" id="lbCount"></span>
+  </div>
+  <aside id="panel" hidden role="dialog" aria-modal="false" aria-labelledby="pTitle" tabindex="-1">
+    <div class="panel-top">
+      <div class="panel-bar">
+        <div class="nav4">
+          <button class="icon-btn" type="button" id="pLeft" aria-label="Соседняя позиция слева">←</button>
+          <button class="icon-btn" type="button" id="pUp" aria-label="Выше или предыдущая">↑</button>
+          <button class="icon-btn" type="button" id="pDown" aria-label="Ниже или следующая">↓</button>
+          <button class="icon-btn" type="button" id="pRight" aria-label="Соседняя позиция справа">→</button>
+          <span class="pos" id="pPos"></span>
+        </div>
+        <button class="icon-btn" type="button" id="pClose" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="p-head">
+        <h3 id="pTitle"></h3>
+        <a class="site" id="pSite" target="_blank" rel="noopener">Открыть на сайте застройщика ↗</a>
+      </div>
+      <p class="p-sub" id="pSub"></p>
+      <div class="badges" id="pBadges"></div>
+    </div>
+    <div class="p-main">
+      <div class="p-empty-note" id="pEmptyNote" hidden></div>
+      <div class="pfacts" id="pFacts"></div>
+      <div class="carousel" id="pCar" tabindex="0" role="group" aria-roledescription="карусель" aria-label="Картинки квартиры">
+        <div class="car-stage">
+          <button class="car-main" type="button" id="pCarMain" aria-label="Открыть крупно"></button>
+          <button class="car-arrow prev" type="button" id="pCarPrev" aria-label="Предыдущая картинка">‹</button>
+          <button class="car-arrow next" type="button" id="pCarNext" aria-label="Следующая картинка">›</button>
+          <span class="car-count" id="pCarCount"></span>
+        </div>
+        <div class="car-thumbs" id="pCarThumbs"></div>
+      </div>
+      <div class="panel-block">
+        <div class="legend" id="pLegend"></div>
+        <div class="chart-host" id="pChart"></div>
+      </div>
+    </div>
+    <div class="panel-block" id="pEventsBlock">
+      <h4>События</h4>
+      <ul class="events" id="pEvents"></ul>
+    </div>
+  </aside>
 </body>
 </html>

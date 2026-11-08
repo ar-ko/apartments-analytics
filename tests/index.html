@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Тесты</title>
+  <link rel="icon" href="data:,">
+  <script type="module">
+    import { run } from './runner.js';
+    import './history.test.js';
+    import './dataset.test.js';
+    import './analytics.test.js';
+    import './sort.test.js';
+    import './url-state.test.js';
+    import './flats-data.test.js';
+    import './price-series.test.js';
+    import './flat-events.test.js';
+    import './chess-model.test.js';
+    import './pagination.test.js';
+    import './carousel.test.js';
+    import './building-filter.test.js';
+    import './format.test.js';
+
+    run(document.getElementById('out'));
+  </script>
+  <style>
+    body { font: 14px/1.5 ui-monospace, Menlo, monospace; margin: 24px; }
+    #out[data-result="ok"] { color: #277a4d; }
+    #out[data-result="fail"] { color: #b8463c; }
+  </style>
+</head>
+<body>
+  <pre id="out">Запуск…</pre>
+</body>
+</html>
