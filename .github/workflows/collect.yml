@@ -22,7 +22,7 @@ jobs:
     env:
       TZ: Asia/Yekaterinburg  # дата выгрузки — по Тюмени
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Собрать данные
         run: python3 scripts/collect_flats.py

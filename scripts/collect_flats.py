@@ -18,8 +18,8 @@
   python3 scripts/collect_flats.py --no-snapshot    # без записи выгрузки дня
   python3 scripts/collect_flats.py --discover       # поискать квартиры, проданные до начала выгрузок
   python3 scripts/collect_flats.py --discover --discover-edge 20 --discover-building 382   # шире, один дом
-  python3 scripts/collect_flats.py --discover --discover-range 54104-74302 --discover-limit 4000 \
-      --delay 1.5 --cache-dir .cache    # полный перебор диапазона по частям: каждый запуск продолжает предыдущий
+  python3 scripts/collect_flats.py --discover --discover-sweep --discover-limit 6000 --delay 1.5 --cache-dir .cache
+                                    # полный перебор ID всех домов по частям: каждый запуск продолжает предыдущий
   python3 scripts/collect_flats.py --cache-dir .cache   # сохранять сырые ответы; карточки квартир из выгрузки
                                                         # всё равно запрашиваются заново
   python3 scripts/collect_flats.py --offline --cache-dir .cache   # пересобрать без сети
@@ -90,6 +90,11 @@ class Client:
                 return json.load(fh) if as_json else fh.read()
         body = self._fetch(url)
         if body is None:
+            # «Такой квартиры нет» — тоже ответ: без него прогон из кэша (--offline) не знал бы, что ID проверен.
+            if cached and as_json and self.last_status == 'not_found':
+                os.makedirs(os.path.dirname(cached), exist_ok=True)
+                with open(cached, 'w', encoding='utf-8') as fh:
+                    fh.write('null')
             return None
         if cached:
             os.makedirs(os.path.dirname(cached), exist_ok=True)
@@ -278,6 +283,35 @@ def reference_candidates(client, flats, probed, building=None):
     return sorted(mentioned - known - set(probed))
 
 
+def sweep_ids(flats, building=None):
+    """Все ID от наименьшего до наибольшего ID квартир каждого дома (building — только одного дома)."""
+    spans = defaultdict(list)
+    for fid, flat in flats.items():
+        if fid.isdigit() and flat.get('b') and (building is None or flat['b'] == str(building)):
+            spans[flat['b']].append(int(fid))
+    return {i for ids in spans.values() for i in range(min(ids), max(ids) + 1)}
+
+
+def id_ranges(ids):
+    """ID → серии [[от, до], ...]: проверенные поиском ID идут подряд, серии в разы короче списка."""
+    ranges = []
+    for i in sorted(ids):
+        if ranges and i == ranges[-1][1] + 1:
+            ranges[-1][1] = i
+        else:
+            ranges.append([i, i])
+    return ranges
+
+
+def read_probed(state):
+    """ID, проверенные поиском, где квартиры нет или она чужая. В flats.json — серии checked вместе с ID квартир
+    (так серии длиннее); прежний формат — список probed."""
+    known = {int(fid) for fid in state['flats'] if fid.isdigit()}
+    if 'checked' in state:
+        return {i for start, end in state['checked'] for i in range(start, end + 1)} - known
+    return set(state.get('probed', [])) - known
+
+
 def discover(candidates, client, flats, sections, buildings, probed, found):
     """Проверить ID-кандидаты; квартиры уже известных домов сохранить, пустые и чужие ID запомнить."""
     for i, fid in enumerate(candidates, 1):
@@ -416,7 +450,7 @@ def dump(state, path):
                       block('flats', state['flats']),
                       block('window_views', state['window_views']),
                       block('floor_plans', state['floor_plans']),
-                      f'"probed":{json.dumps(sorted(state.get("probed", [])))},',
+                      f'"checked":{json.dumps(state.get("checked", []), separators=(",", ":"))},',
                       block('sections', state['sections']),
                       block('buildings', state['buildings'], last=True)]) + '\n}\n'
     tmp = path + '.tmp'
@@ -440,8 +474,9 @@ def main():
     parser.add_argument('--discover-gap', type=int, default=40, help='наибольший разрыв ID внутри пачки дома')
     parser.add_argument('--discover-edge', type=int, default=0, help='сколько ID проверять за краями каждой пачки')
     parser.add_argument('--discover-building', help='искать только для одного дома (id дома в API)')
-    parser.add_argument('--discover-range', metavar='ОТ-ДО',
-                        help='проверить и все ID диапазона подряд (полный перебор — тысячи запросов)')
+    parser.add_argument('--discover-sweep', action='store_true',
+                        help='проверить и все ID подряд от наименьшего до наибольшего ID каждого дома '
+                             '(с --discover-building — одного дома); десятки тысяч запросов, дробить --discover-limit')
     parser.add_argument('--discover-limit', type=int, metavar='N',
                         help='не больше N ID за запуск поиска; проверенные запоминаются, следующий запуск продолжит')
     parser.add_argument('--offline', action='store_true',
@@ -449,12 +484,6 @@ def main():
     parser.add_argument('--no-snapshot', action='store_true',
                         help='не записывать список квартир в продаже в историю как выгрузку дня')
     args = parser.parse_args()
-    sweep = set()
-    if args.discover_range:
-        bounds = re.fullmatch(r'(\d+)-(\d+)', args.discover_range)
-        if not bounds or int(bounds[1]) > int(bounds[2]):
-            sys.exit('--discover-range: нужен диапазон вида 54104-74302')
-        sweep = set(range(int(bounds[1]), int(bounds[2]) + 1))
 
     out_path = os.path.join(args.data_dir, 'flats.json')
     state = {'version': 1, 'flats': {}, 'window_views': {}, 'floor_plans': {}, 'sections': {}, 'buildings': {}}
@@ -462,6 +491,7 @@ def main():
         with open(out_path, encoding='utf-8') as fh:
             state.update(json.load(fh))
     flats, sections, buildings = state['flats'], state['sections'], state['buildings']
+    probed = read_probed(state)
     previous_booking = {fid: flat.get('bk', 0) for fid, flat in flats.items()}
     client = Client(args.delay, args.cache_dir, offline=args.offline)
 
@@ -516,8 +546,8 @@ def main():
     # Поиск квартир, проданных до начала выгрузок. Сохраняем только квартиры уже известных домов,
     # чтобы на сайте не появлялись чужие проекты; пустые и чужие ID запоминаем, чтобы не спрашивать снова.
     if args.discover:
-        probed = set(state.get('probed', []))
         found = 0
+        sweep = sweep_ids(flats, args.discover_building) if args.discover_sweep else set()
         if not args.cache_dir:
             log('Без --cache-dir поиск идёт только по пачкам ID: ссылки читаются из сохранённых ответов')
         budget = args.discover_limit
@@ -544,10 +574,9 @@ def main():
                 break
             if args.cache_dir and not client.offline:
                 fetch_window_views(state, client)  # у новых квартир свои группы вида — свои ссылки
-        state['probed'] = sorted(probed)
         log(f'Поиск: найдено квартир {found}')
         if sweep:
-            log(f'Перебор {args.discover_range}: осталось проверить ID {len(unchecked())}')
+            log(f'Перебор: осталось проверить ID {len(unchecked())}')
 
     # Бронь — только у квартир в продаже, на дату сбора.
     if not args.offline:
@@ -574,6 +603,8 @@ def main():
                                            {k: {kk: v[kk] for kk in ('name', 'project', 'delivery')}
                                             for k, v in buildings.items()},
                                            state['floor_plans'], ever_seen)
+    state.pop('probed', None)
+    state['checked'] = id_ranges(probed | {int(fid) for fid in flats if fid.isdigit()})
     state['generated'] = date.today().isoformat()
     if not args.offline:
         state['list_date'] = date.today().isoformat()
