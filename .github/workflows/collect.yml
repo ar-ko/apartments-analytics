@@ -1,11 +1,15 @@
 # Ежедневный сбор данных: выгрузка дня в data/history.json и обновление data/flats.json (scripts/collect_flats.py).
 # Запуск по расписанию и вручную: Actions → «Сбор данных» → Run workflow.
 # Если сервер застройщика перестал отвечать, собранное всё равно коммитится, а запуск помечается упавшим.
+# GitHub запускает расписание «по возможности» и иногда пропускает запуск, поэтому времени три:
+# первый удачный запуск дня собирает данные, следующие видят выгрузку за сегодня и сразу выходят.
 name: Сбор данных
 
 on:
   schedule:
-    - cron: '17 4 * * *'  # 09:17 по Тюмени; GitHub может запустить с задержкой
+    - cron: '17 4 * * *'   # 09:17 по Тюмени
+    - cron: '17 7 * * *'   # 12:17 — запасной
+    - cron: '17 10 * * *'  # 15:17 — запасной
   workflow_dispatch:
 
 permissions:
@@ -24,11 +28,22 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Проверить, есть ли выгрузка за сегодня
+        id: today
+        if: github.event_name == 'schedule'
+        run: |
+          last=$(python3 -c "import json; print(json.load(open('data/history.json'))['dates'][-1])")
+          if [ "$last" = "$(date +%F)" ]; then
+            echo "Выгрузка за $last уже есть — пропуск"
+            echo 'done=true' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Собрать данные
+        if: steps.today.outputs.done != 'true'
         run: python3 scripts/collect_flats.py
 
       - name: Закоммитить data/
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.today.outputs.done != 'true' }}
         run: |
           git add data/
           if git diff --cached --quiet; then
