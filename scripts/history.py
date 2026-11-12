@@ -4,6 +4,8 @@
 Постоянные поля квартиры (проект, дом, секция, этаж, этажность секции, ссылка) хранятся один раз —
 последнее непустое значение. Цена, полная цена и площадь хранятся только в моменты изменения,
 наличие в выгрузках — интервалами. Сайт разворачивает файл обратно в строки выгрузок.
+Выгрузка за день одна: повторный сбор в тот же день её заменяет. Время последней выгрузки (ЧЧ:ММ) —
+в поле last_time; у выгрузки из CSV времени нет, и поля тоже нет.
 
 Запуск из корня репозитория:
   python3 scripts/history.py build data/*.csv              # собрать history.json из CSV-выгрузок
@@ -151,12 +153,13 @@ def as_number(value):
     return int(value) if value is not None and float(value).is_integer() else value
 
 
-def add_snapshot(history, snapshot_date, records):
+def add_snapshot(history, snapshot_date, records, time=None):
     dates = history['dates']
     if dates and snapshot_date <= dates[-1]:
         raise ValueError(f'выгрузка {snapshot_date} не новее последней в истории ({dates[-1]})')
     index = len(dates)
     dates.append(snapshot_date)
+    set_last_time(history, time)
     projects = history['projects']
     seen = set()
     for record in records:
@@ -207,14 +210,23 @@ def drop_last_snapshot(history):
         if not runs:
             del history['flats'][fid]
     history['dates'].pop()
+    set_last_time(history, None)
 
 
-def put_snapshot(history, snapshot_date, records):
+def set_last_time(history, time):
+    """Время относится к последней выгрузке, поэтому меняется вместе с ней; None — время неизвестно."""
+    if time:
+        history['last_time'] = time
+    else:
+        history.pop('last_time', None)
+
+
+def put_snapshot(history, snapshot_date, records, time=None):
     """Добавить выгрузку; выгрузку за ту же дату, что последняя, — заменить."""
     replaced = bool(history['dates']) and history['dates'][-1] == snapshot_date
     if replaced:
         drop_last_snapshot(history)
-    add_snapshot(history, snapshot_date, records)
+    add_snapshot(history, snapshot_date, records, time)
     return replaced
 
 
@@ -274,7 +286,7 @@ def load(path):
 def save(history, path):
     """Отдельная строка на квартиру — чтобы добавление выгрузки было читаемо в git diff."""
     compact_links(history)
-    head = json.dumps({k: history[k] for k in ('version', 'dates', 'link', 'projects')},
+    head = json.dumps({k: history[k] for k in ('version', 'dates', 'last_time', 'link', 'projects') if k in history},
                       ensure_ascii=False, separators=(',', ':'))[:-1]
     flats = sorted(history['flats'].items(), key=lambda kv: (len(kv[0]), kv[0]))
     lines = [f'{json.dumps(fid)}:{json.dumps(flat, ensure_ascii=False, separators=(",", ":"))}' for fid, flat in flats]

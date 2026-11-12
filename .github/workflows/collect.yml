@@ -41,6 +41,6 @@ jobs:
           fi
           git -c user.name='github-actions[bot]' \
               -c user.email='41898333+github-actions[bot]@users.noreply.github.com' \
-              commit -m "upd data $(date +%F)"
+              commit -m "upd data $(date '+%F %H:%M')"
           git pull --rebase
           git push

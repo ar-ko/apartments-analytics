@@ -46,7 +46,7 @@ import time
 import urllib.error
 import urllib.request
 from collections import defaultdict
-from datetime import date
+from datetime import date, datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import history as history_file  # noqa: E402  соседний модуль: формат data/history.json
@@ -515,12 +515,13 @@ def main():
             history_path = os.path.join(args.data_dir, 'history.json')
             history = history_file.load(history_path)
             records = [r for r in (history_file.normalize(history_file.row_from_listing(i)) for i in items) if r]
-            today = date.today().isoformat()
-            replaced = history_file.put_snapshot(history, today, records)
+            now = datetime.now()
+            today, clock = now.date().isoformat(), now.strftime('%H:%M')
+            replaced = history_file.put_snapshot(history, today, records, clock)
             history_file.save(history, history_path)
             ever_seen, latest_csv = read_history_flat_ids(args.data_dir)
             unique = len({r['flat_id'] for r in records})
-            log(f'Выгрузка {today} {"обновлена" if replaced else "добавлена"} в историю: квартир {unique}')
+            log(f'Выгрузка {today} {clock} {"обновлена" if replaced else "добавлена"} в историю: квартир {unique}')
 
     # Карточки: новые квартиры и ушедшие из продажи, пока они не отмечены проданными.
     wanted = sorted(ever_seen | set(on_sale) | (set(flats) if args.refresh else set()), key=lambda s: (len(s), s))

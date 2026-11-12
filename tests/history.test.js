@@ -1,4 +1,4 @@
-import { dateInfo, expandHistory } from '../js/history.js';
+import { dateInfo, expandHistory, readHistory } from '../js/history.js';
 import { assert, test } from './runner.js';
 
 const HISTORY = {
@@ -16,6 +16,12 @@ const HISTORY = {
 
 test('dateInfo: подпись и ключ сортировки из ISO-даты', () => {
   assert.deepEqual(dateInfo('2026-11-07'), { iso: '2026-11-07', label: '07.11.2026', sort: '2026-11-07' });
+});
+
+test('readHistory: время последней выгрузки, если оно есть', () => {
+  assert.equal(readHistory({ ...HISTORY, last_time: '14:17' }).lastTime, '14:17');
+  assert.equal(readHistory(HISTORY).lastTime, null);
+  assert.equal(readHistory(HISTORY).rows.length, expandHistory(HISTORY).length);
 });
 
 test('expandHistory: квартира есть только в выгрузках своих интервалов', () => {

@@ -8,7 +8,7 @@ import { createFlatsBlock } from './flats-block.js';
 import { buildFlatsModel, loadFlatsJson } from './flats-data.js';
 import { bindDigitGroups } from './dom.js';
 import { areaText, digitsOnly, escapeHtml, fmtMoney, groupDigits, money } from './format.js';
-import { loadHistoryRows } from './history.js';
+import { loadHistory } from './history.js';
 import { NO_SORT, sortRows } from './sort.js';
 import { bindSortableHead, renderTable } from './table.js';
 import { buildUrlSearch, flatFromState, fromFromState, parseUrlState, viewFromState } from './url-state.js';
@@ -122,22 +122,23 @@ async function loadFromSiteFiles() {
   try {
     // Постоянные данные квартир необязательны: без них нет картинок и шахматки, остальное работает.
     // Пока данные грузятся, в строке статуса остаётся «Загружаю данные…»; после загрузки она скрывается.
-    const [rows, flatsJson] = await Promise.all([loadHistoryRows(), loadFlatsJson()]);
-    setData(rows, flatsJson);
+    const [saved, flatsJson] = await Promise.all([loadHistory(), loadFlatsJson()]);
+    setData(saved.rows, flatsJson, saved.lastTime);
   } catch (error) {
     console.error(error);
     setStatus(`Ошибка загрузки: ${error.message}. Проверь data/history.json.`, true);
   }
 }
 
-function setData(rows, flatsJson) {
+function setData(rows, flatsJson, lastTime = null) {
   state.dataset = buildDataset(rows);
-  // Дата последней выгрузки — в шапке и в заголовке вкладки: по ней считаются сводка, проекты и «Квартиры».
+  // Дата и время последней выгрузки — в шапке и в заголовке вкладки: по ней считаются сводка, проекты и «Квартиры».
   const latest = state.dataset.snapshots.at(-1);
   if (latest) {
-    els.dataDate.textContent = `Последняя выгрузка: ${latest.label}`;
+    const when = lastTime ? `${latest.label}, ${lastTime}` : latest.label;
+    els.dataDate.textContent = `Последняя выгрузка: ${when}`;
     els.dataDate.hidden = false;
-    document.title = `Аналитика квартир · ${latest.label}`;
+    document.title = `Аналитика квартир · ${when}`;
   }
   state.buildingPairs = buildingPairs(state.dataset.allRows);
   const model = buildFlatsModel(state.dataset, flatsJson);

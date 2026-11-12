@@ -4,10 +4,15 @@
 
 const HISTORY_URL = 'data/history.json';
 
-export async function loadHistoryRows() {
+export async function loadHistory() {
   const response = await fetch(HISTORY_URL, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Не найден ${HISTORY_URL}`);
-  return expandHistory(await response.json());
+  return readHistory(await response.json());
+}
+
+// lastTime — время последней выгрузки «ЧЧ:ММ» по Тюмени; у выгрузок из CSV его нет.
+export function readHistory(history) {
+  return { rows: expandHistory(history), lastTime: history.last_time ?? null };
 }
 
 export function dateInfo(iso) {
