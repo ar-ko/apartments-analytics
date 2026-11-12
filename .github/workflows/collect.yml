@@ -1,14 +1,13 @@
-# Ежедневный сбор данных: выгрузка дня в data/history.json и обновление data/flats.json (scripts/collect_flats.py).
+# Ежечасный сбор данных: выгрузка дня в data/history.json и обновление data/flats.json (scripts/collect_flats.py).
+# Каждый запуск заменяет выгрузку за сегодня (по Тюмени), поэтому в истории остаётся последнее состояние за день.
 # Запуск по расписанию и вручную: Actions → «Сбор данных» → Run workflow.
 # Если сервер застройщика перестал отвечать, собранное всё равно коммитится, а запуск помечается упавшим.
-# GitHub запускает расписание «по возможности»: опаздывает на часы и иногда пропускает запуск. Поэтому запусков
-# четыре, через 6 часов: первый удачный за день (по Тюмени) собирает данные, следующие видят выгрузку за сегодня
-# и сразу выходят, не обращаясь к серверу застройщика.
+# GitHub запускает расписание «по возможности»: запуск может опоздать или пропасть — данные доберёт следующий.
 name: Сбор данных
 
 on:
   schedule:
-    - cron: '17 22,4,10,16 * * *'  # по Тюмени (UTC+5): 03:17 — основной, 09:17, 15:17, 21:17 — запасные
+    - cron: '17 * * * *'  # каждый час в :17 — не в начало часа, когда очередь GitHub длиннее
   workflow_dispatch:
 
 permissions:
@@ -29,22 +28,11 @@ jobs:
         with:
           ref: main  # свежий main, а не коммит на момент события: запуск из очереди увидит данные предыдущего
 
-      - name: Проверить, есть ли выгрузка за сегодня
-        id: today
-        if: github.event_name == 'schedule'
-        run: |
-          last=$(python3 -c "import json; print(json.load(open('data/history.json'))['dates'][-1])")
-          if [ "$last" = "$(date +%F)" ]; then
-            echo "Выгрузка за $last уже есть — пропуск"
-            echo 'done=true' >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Собрать данные
-        if: steps.today.outputs.done != 'true'
         run: python3 scripts/collect_flats.py
 
       - name: Закоммитить data/
-        if: ${{ !cancelled() && steps.today.outputs.done != 'true' }}
+        if: ${{ !cancelled() }}
         run: |
           git add data/
           if git diff --cached --quiet; then
