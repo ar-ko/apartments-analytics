@@ -4126,7 +4126,7 @@
 "48193":{"st":"sold","pos":5,"fl":3,"sec":"924","b":"354","plan":"flat/flat_image_file/flat_e3764ee2-2ebc-415b-b8e2-0056ff210628.svg","dims":null,"floor":"flat/floor_image_file/dec9f4dcd553475fe451f710f12c4d09.svg","wvp":5515,"sq":84.3,"p":12060000,"bk":0},
 "48194":{"st":"booked","pos":2,"fl":1,"sec":"922","b":"354","plan":"flat/flat_image_file/b4c9996b2baaa7d9fb48cc759e0ac551.svg","dims":null,"floor":"flat/floor_image_file/9de80a238ecef793f4243a4276d3a452.svg","wvp":5482,"sq":110.2,"p":14030000,"bk":1},
 "48195":{"st":"free","pos":1,"fl":2,"sec":"924","b":"354","plan":"flat/flat_image_file/596c10fd8dda55bbfcd2f12ffb614e4b.svg","dims":null,"floor":"flat/floor_image_file/dec9f4dcd553475fe451f710f12c4d09.svg","wvp":5511,"sq":121.2,"p":16400000,"bk":0},
-"48196":{"st":"booked","pos":1,"fl":7,"sec":"926","b":"354","plan":"flat/flat_image_file/8b391ae00dcfd8cac1f57fa9859aac0f.svg","dims":null,"floor":"flat/floor_image_file/a321fbc9b6dcdfd18523aaa21b347f03.svg","wvp":5547,"sq":146.1,"p":17440000,"lv":2,"bk":0},
+"48196":{"st":"sold","pos":1,"fl":7,"sec":"926","b":"354","plan":"https://brusnika.ru/media/flat/flat_image_file/8b391ae00dcfd8cac1f57fa9859aac0f.svg","dims":null,"floor":"flat/floor_image_file/a321fbc9b6dcdfd18523aaa21b347f03.svg","wvp":5547,"sq":146.1,"p":17440000,"lv":2,"bk":0},
 "48197":{"st":"sold","pos":6,"fl":2,"sec":"928","b":"354","plan":"flat/flat_image_file/6c0eb3cd000418a1be9b2dddc1fc9f65.svg","dims":null,"floor":"flat/floor_image_file/189eeb3a06bb7ec5a6c89cc4a65ab976.svg","wvp":5567,"sq":95.5,"p":11710000,"bk":0},
 "48198":{"st":"sold","pos":2,"fl":13,"sec":"924","b":"354","plan":"flat/flat_image_file/flat_e6213f7c-6123-4da6-8420-90af7ac2f1ff.svg","dims":null,"floor":"flat/floor_image_file/floor_6b632842-e4eb-11ee-b83e-005056014a0c.svg","wvp":5524,"sq":78.4,"p":12060000,"bk":0},
 "48199":{"st":"sold","pos":3,"fl":5,"sec":"922","b":"354","plan":"flat/flat_image_file/flat_b502c4cc-217c-4233-9a0c-da42ad3f4cbe.svg","dims":null,"floor":"flat/floor_image_file/floor_3d3201ec-e4eb-11ee-b83e-005056014a0c.svg","wvp":5495,"sq":66.1,"p":10250000,"bk":0},
@@ -7310,7 +7310,7 @@
 "71858":{"st":"sold","pos":2,"fl":5,"sec":"1051","b":"377","plan":"flat/flat_image_file/7a1d720c7577dd8d5c517a644a2537df.svg","dims":"flat/flat7_image_file/2ef1cd3e705389aaab9b208b4f50e2a7.svg","floor":"flat/floor_image_file/c5e4b09eeb51f793111cca05e6bbd9fe.svg","wvp":6707,"sq":45.8,"p":8540000,"bk":0},
 "71859":{"st":"free","pos":7,"fl":12,"sec":"1045","b":"377","plan":"flat/flat_image_file/04a71e52acff9cc7513c9641a34b03a0.svg","dims":"flat/flat7_image_file/7a7142d20af5067388a48a0b76ca1064.svg","floor":"flat/floor_image_file/c4eafb9c70d212c5f1239af412883c8e.svg","wvp":6609,"sq":78.9,"p":10530000,"bk":0},
 "71860":{"st":"free","pos":8,"fl":9,"sec":"1045","b":"377","plan":"flat/flat_image_file/84550c8dd4674beab1caa2d86f2da625.svg","dims":"flat/flat7_image_file/30bc8ab03c046717af7ecaeb397b4383.svg","floor":"flat/floor_image_file/8bffd6e7614407bfdb644675a539dee5.svg","wvp":6602,"sq":57.4,"p":9400000,"bk":1},
-"71861":{"st":"free","pos":3,"fl":6,"sec":"1046","b":"377","plan":"flat/flat_image_file/8424176cc56367d52866736fcc6f8c75.svg","dims":"flat/flat7_image_file/ceeeba6746c0dd4134a379357e4ae436.svg","floor":"flat/floor_image_file/442db29e4bdd3580b6b62c7b8015dbab.svg","wvp":6650,"sq":45.9,"p":8390000,"bk":0},
+"71861":{"st":"free","pos":3,"fl":6,"sec":"1046","b":"377","plan":"flat/flat_image_file/8424176cc56367d52866736fcc6f8c75.svg","dims":"flat/flat7_image_file/ceeeba6746c0dd4134a379357e4ae436.svg","floor":"flat/floor_image_file/442db29e4bdd3580b6b62c7b8015dbab.svg","wvp":6650,"sq":45.9,"p":8390000,"bk":1},
 "71862":{"st":"sold","pos":2,"fl":9,"sec":"1051","b":"377","plan":"flat/flat_image_file/0d3a33bab3ef769b0c334e79c4029443.svg","dims":"flat/flat7_image_file/19a164569b3e3be265110d25faa2bca9.svg","floor":"flat/floor_image_file/75148bad2a12b1d3cc4f8158bc847db3.svg","wvp":6714,"sq":42.6,"p":8310000,"bk":0},
 "71863":{"st":"sold","pos":4,"fl":3,"sec":"1046","b":"377","plan":null,"dims":null,"floor":"flat/floor_image_file/442db29e4bdd3580b6b62c7b8015dbab.svg","wvp":6651,"sq":24.1,"p":4600000,"bk":0},
 "71864":{"st":"sold","pos":3,"fl":3,"sec":"1047","b":"377","plan":"flat/flat_image_file/22c25d0c48e88c99a1004a89eaf1d0ab.svg","dims":"flat/flat7_image_file/656c69f17c120858794b2561c4262478.svg","floor":"flat/floor_image_file/c725d1a9892fca96b1cccdd4c1715557.svg","wvp":6635,"sq":36.0,"p":6810000,"bk":0},
@@ -10591,7 +10591,8 @@
 "flat/floor_image_file/floor_fd46e027-c5d7-11f0-8ccc-0050560bde23.svg":[1,2,3,4,5,6,7,8],
 "flat/floor_image_file/floor_fd46e0e3-c5d7-11f0-8ccc-0050560bde23.svg":[1,2,3,4,5,6,7],
 "flat/floor_image_file/floor_fde770d0-5544-11ef-b84b-005056014a0c.svg":[1,2],
-"flat/floor_image_file/floor_ff35c99a-43fd-11ef-b849-005056014a0c.svg":[1,2,3,4,5,8,9,10,11]
+"flat/floor_image_file/floor_ff35c99a-43fd-11ef-b849-005056014a0c.svg":[1,2,3,4,5,8,9,10,11],
+"https://brusnika.ru/media/flat/floor_image_file/a321fbc9b6dcdfd18523aaa21b347f03.svg":[1,2,3,4,5]
 },
 "checked":[[3422,74667],[75150,75152]],
 "sections":{
